@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#176B64">
+  <meta name="description" content="CAREX — Simple, accessible, safe and connected elderly-care web application.">
+  <title>CAREX — Elderly Care & Patient Assistance</title>
+  
+  <link rel="icon" type="image/svg+xml" href="./public/favicon.svg">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/reset.css">
+  <link rel="stylesheet" href="./css/layout.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/pages.css">
+  <link rel="stylesheet" href="./css/animations.css">
+  <link rel="stylesheet" href="./css/responsive.css">
+</head>
+<body>
+  <!-- Skip Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div id="app" class="app-layout">
+    <!-- Desktop Sidebar Container -->
+    <aside id="sidebar-container" class="app-sidebar" aria-label="Main Navigation"></aside>
+
+    <!-- Main Wrapper (Header + Content) -->
+    <div class="app-main-wrapper">
+      <!-- Responsive Header -->
+      <header id="header-container" class="app-header"></header>
+
+      <!-- Main Content Area -->
+      <main id="main-content" class="app-content" tabindex="-1" role="main">
+        <div class="loading-spinner-container">
+          <div class="loading-spinner"></div>
+          <p>Loading CAREX...</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav id="bottom-nav-container" class="app-bottom-nav" aria-label="Mobile Navigation"></nav>
+  </div>
+
+  <!-- Reusable Modal Container -->
+  <div id="modal-container"></div>
+
+  <!-- Accessible Toast Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ES Module Application Entry -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
