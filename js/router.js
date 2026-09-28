@@ -1,11 +1,13 @@
 /**
- * Client-Side SPA Hash Router.
+ * Client-Side SPA Hash Router with Multi-Language Reactive Re-render.
  */
 
 import { refreshLucideIcons } from './utils/helpers.js';
+import { subscribe } from './services/languageService.js';
 
 let routes = {};
 let currentCleanup = null;
+let currentActiveRoute = 'home';
 
 export const router = {
   register(routeMap) {
@@ -14,6 +16,13 @@ export const router = {
 
   init() {
     window.addEventListener('hashchange', () => this.handleRoute());
+    window.router = this;
+
+    // When language changes, re-render the current route in new language
+    subscribe(() => {
+      this.handleRoute();
+    });
+
     this.handleRoute();
   },
 
@@ -24,6 +33,7 @@ export const router = {
   async handleRoute() {
     const hash = window.location.hash.slice(2) || 'home';
     const cleanRoute = hash.split('?')[0];
+    currentActiveRoute = cleanRoute;
 
     const routeLoader = routes[cleanRoute] || routes['home'];
     if (!routeLoader) return;
@@ -70,7 +80,7 @@ export const router = {
     }
   },
 
-  updateActiveNavLinks(activeRoute) {
+  updateActiveNavLinks(activeRoute = currentActiveRoute) {
     document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(link => {
       const href = link.getAttribute('href') || '';
       const target = href.replace('#/', '');

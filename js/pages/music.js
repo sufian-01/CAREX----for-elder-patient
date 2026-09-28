@@ -1,10 +1,12 @@
 /**
  * Nasheed & Relaxation Music Player Module (HTML5 Audio API).
- * Fixes play/pause button state sync and icon toggling.
+ * Fixes dynamic track info update in the DOM when changing tracks
+ * and integrates multi-language support (English / Hindi).
  */
 
 import { toast } from '../components/toast.js';
 import { escapeHtml, refreshLucideIcons } from '../utils/helpers.js';
+import { t } from '../services/languageService.js';
 
 let audioPlayer = new Audio();
 let isPlaying = false;
@@ -66,18 +68,18 @@ export function render() {
     <div class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">🎵 Nasheed & Devotional Recitation</h1>
-          <p class="page-subtitle">Listen to peaceful Nasheeds and soothing recitations.</p>
+          <h1 class="page-title">🎵 ${t('music.title')}</h1>
+          <p class="page-subtitle">${t('music.subtitle')}</p>
         </div>
       </div>
 
       <!-- Player Card -->
       <div class="card music-player-card">
-        <div class="music-artwork ${isPlaying ? 'animate-pulse' : ''}">
+        <div class="music-artwork ${isPlaying ? 'animate-pulse' : ''}" id="music-artwork-box">
           <i data-lucide="music" style="width: 56px; height: 56px;"></i>
         </div>
 
-        <div style="margin-top: var(--space-xs);">
+        <div style="margin-top: var(--space-xs); text-align: center;">
           <h2 style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-text);" id="track-title">
             ${escapeHtml(track.title)}
           </h2>
@@ -85,7 +87,7 @@ export function render() {
             ${escapeHtml(track.artist)}
           </p>
           <span class="badge badge-info" style="margin-top: 6px;" id="track-category">
-            Category: ${escapeHtml(track.category)}
+            ${t('music.category')}: ${escapeHtml(track.category)}
           </span>
         </div>
 
@@ -119,27 +121,27 @@ export function render() {
           <input type="range" id="volume-bar" class="progress-bar" min="0" max="1" step="0.05" value="${audioPlayer.volume !== undefined ? audioPlayer.volume : 0.8}">
         </div>
 
-        ${track.officialUrl ? `
-          <div style="margin-top: var(--space-sm);">
+        <div id="official-link-container" style="margin-top: var(--space-sm);">
+          ${track.officialUrl ? `
             <a href="${track.officialUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
-              <i data-lucide="external-link"></i> Visit Official Artist Channel
+              <i data-lucide="external-link"></i> ${t('music.official_channel')}
             </a>
-          </div>
-        ` : ''}
+          ` : ''}
+        </div>
       </div>
 
       <!-- Playlist Selection -->
       <div class="card">
         <div class="card-header">
-          <h3 style="font-size: var(--font-size-xl); font-weight: 800;">Nasheed & Recitation Playlist</h3>
-          <a href="./CREDITS.md" target="_blank" class="btn btn-secondary btn-sm">View Audio Credits</a>
+          <h3 style="font-size: var(--font-size-xl); font-weight: 800;">${t('music.playlist_title')}</h3>
+          <a href="./CREDITS.md" target="_blank" class="btn btn-secondary btn-sm">${t('music.credits_btn')}</a>
         </div>
         
-        <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+        <div id="playlist-container" style="display: flex; flex-direction: column; gap: var(--space-xs);">
           ${playlist.map((item, idx) => `
-            <div class="card" style="padding: var(--space-md); display: flex; justify-content: space-between; align-items: center; cursor: pointer; background-color: ${idx === currentTrackIndex ? 'var(--color-primary-light)' : 'var(--color-surface)'};" onclick="window.selectTrack(${idx})">
+            <div class="card playlist-item" id="playlist-item-${idx}" style="padding: var(--space-md); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background-color 0.2s; background-color: ${idx === currentTrackIndex ? 'var(--color-primary-light)' : 'var(--color-surface)'};" onclick="window.selectTrack(${idx})">
               <div style="display: flex; align-items: center; gap: var(--space-sm);">
-                <i data-lucide="${idx === currentTrackIndex && isPlaying ? 'volume-2' : 'music'}"></i>
+                <i data-lucide="${idx === currentTrackIndex && isPlaying ? 'volume-2' : 'music'}" class="playlist-icon-${idx}"></i>
                 <div>
                   <div style="font-weight: 700;">${escapeHtml(item.title)}</div>
                   <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${escapeHtml(item.artist)} · ${escapeHtml(item.category)}</div>
@@ -165,6 +167,58 @@ export function init() {
   function updatePlayButtonIcon() {
     if (!playBtn) return;
     playBtn.innerHTML = `<i data-lucide="${isPlaying ? 'pause' : 'play'}"></i>`;
+    const artBox = document.getElementById('music-artwork-box');
+    if (artBox) {
+      if (isPlaying) {
+        artBox.classList.add('animate-pulse');
+      } else {
+        artBox.classList.remove('animate-pulse');
+      }
+    }
+    refreshLucideIcons();
+  }
+
+  /**
+   * CRITICAL BUG FIX:
+   * Explicitly updates top player title, artist, category, duration,
+   * official link, and playlist item highlighting whenever track changes!
+   */
+  function updatePlayerDisplay(track, idx) {
+    const titleEl = document.getElementById('track-title');
+    const artistEl = document.getElementById('track-artist');
+    const categoryEl = document.getElementById('track-category');
+    const durationEl = document.getElementById('duration-display');
+    const officialContainer = document.getElementById('official-link-container');
+
+    if (titleEl) titleEl.textContent = track.title;
+    if (artistEl) artistEl.textContent = track.artist;
+    if (categoryEl) categoryEl.textContent = `${t('music.category')}: ${track.category}`;
+    if (durationEl) durationEl.textContent = track.duration;
+
+    if (officialContainer) {
+      if (track.officialUrl) {
+        officialContainer.innerHTML = `
+          <a href="${track.officialUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+            <i data-lucide="external-link"></i> ${t('music.official_channel')}
+          </a>
+        `;
+      } else {
+        officialContainer.innerHTML = '';
+      }
+    }
+
+    // Update active highlight in playlist
+    playlist.forEach((_, i) => {
+      const row = document.getElementById(`playlist-item-${i}`);
+      if (row) {
+        if (i === idx) {
+          row.style.backgroundColor = 'var(--color-primary-light)';
+        } else {
+          row.style.backgroundColor = 'var(--color-surface)';
+        }
+      }
+    });
+
     refreshLucideIcons();
   }
 
@@ -180,8 +234,16 @@ export function init() {
     stopProgressTimer();
   };
 
+  audioPlayer.onended = () => {
+    // Auto-advance to next track
+    currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+    window.selectTrack(currentTrackIndex);
+  };
+
   window.selectTrack = (idx) => {
     currentTrackIndex = idx;
+    const track = playlist[currentTrackIndex];
+    updatePlayerDisplay(track, currentTrackIndex);
     loadTrack(currentTrackIndex);
     playTrack();
   };
@@ -195,16 +257,18 @@ export function init() {
 
   function playTrack() {
     const track = playlist[currentTrackIndex];
-    if (!audioPlayer.src) loadTrack(currentTrackIndex);
+    if (!audioPlayer.src || !audioPlayer.src.includes(track.src.replace('./', ''))) {
+      loadTrack(currentTrackIndex);
+    }
 
     audioPlayer.play().then(() => {
       isPlaying = true;
       updatePlayButtonIcon();
-      toast.show(`Now Playing: ${track.title}`, 'info');
+      toast.show(t('music.now_playing_toast', { title: track.title }), 'info');
       startProgressTimer();
     }).catch(err => {
       console.error('Audio playback error:', err);
-      toast.show('Audio playback error.', 'warning');
+      toast.show(t('music.playback_error'), 'warning');
     });
   }
 
@@ -220,7 +284,7 @@ export function init() {
     updateInterval = setInterval(() => {
       if (audioPlayer.duration && seekBar && currentTimeDisplay) {
         const pct = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-        seekBar.value = pct;
+        seekBar.value = isNaN(pct) ? 0 : pct;
         const mins = Math.floor(audioPlayer.currentTime / 60);
         const secs = Math.floor(audioPlayer.currentTime % 60);
         currentTimeDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -270,6 +334,9 @@ export function init() {
       audioPlayer.volume = parseFloat(volumeBar.value);
     };
   }
+
+  // Ensure current track UI is synced on mount
+  updatePlayerDisplay(playlist[currentTrackIndex], currentTrackIndex);
 
   return () => {
     stopProgressTimer();

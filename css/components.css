@@ -418,3 +418,48 @@ textarea.form-control {
   color: var(--color-text);
   margin-bottom: var(--space-xs);
 }
+
+/* Language Selector */
+.lang-selector-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.lang-select-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  padding: 8px 30px 8px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  min-height: 40px;
+  box-shadow: var(--shadow-sm);
+}
+
+.lang-select-input:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg);
+}
+
+.lang-select-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(23, 107, 100, 0.2);
+}
+
+.lang-selector-wrapper::after {
+  content: "▾";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}

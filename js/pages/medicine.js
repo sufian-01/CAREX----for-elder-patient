@@ -1,5 +1,5 @@
 /**
- * Medicine Management Page Module.
+ * Medicine Management Page Module with Multi-Language Support.
  */
 
 import { state } from '../state.js';
@@ -8,6 +8,8 @@ import { isNotEmpty } from '../utils/validation.js';
 import { formatTime12h } from '../utils/dateUtils.js';
 import { toast } from '../components/toast.js';
 import { modal } from '../components/modal.js';
+import { router } from '../router.js';
+import { t } from '../services/languageService.js';
 
 export function render() {
   const medicines = state.get('medicines') || [];
@@ -16,52 +18,54 @@ export function render() {
     <div class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">💊 Medicine Reminders</h1>
-          <p class="page-subtitle">Schedule and track your daily dosages.</p>
+          <h1 class="page-title">💊 ${t('medicine.title')}</h1>
+          <p class="page-subtitle">${t('medicine.subtitle')}</p>
         </div>
       </div>
 
       <!-- Add / Edit Medicine Form -->
       <div class="card">
         <h2 style="font-size: var(--font-size-xl); font-weight: 800; margin-bottom: var(--space-md);">
-          Add New Medicine
+          ${t('medicine.form_title')}
         </h2>
         <form id="med-form">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
             <div class="form-group">
-              <label for="med-name">Medicine Name *</label>
-              <input type="text" id="med-name" class="form-control" placeholder="e.g. Paracetamol" required>
+              <label for="med-name">${t('medicine.name_label')}</label>
+              <input type="text" id="med-name" class="form-control" placeholder="${t('medicine.name_placeholder')}" required>
             </div>
 
             <div class="form-group">
-              <label for="med-dose">Dosage</label>
-              <input type="text" id="med-dose" class="form-control" placeholder="e.g. 1 tablet (500mg)">
+              <label for="med-dose">${t('medicine.dose_label')}</label>
+              <input type="text" id="med-dose" class="form-control" placeholder="${t('medicine.dose_placeholder')}">
             </div>
 
             <div class="form-group">
-              <label for="med-time">Time</label>
+              <label for="med-time">${t('medicine.time_label')}</label>
               <input type="time" id="med-time" class="form-control" value="08:00">
             </div>
 
             <div class="form-group">
-              <label for="med-freq">Frequency</label>
+              <label for="med-freq">${t('medicine.freq_label')}</label>
               <select id="med-freq" class="form-control">
-                <option value="Daily">Daily</option>
-                <option value="Twice a day">Twice a day</option>
-                <option value="Weekly">Weekly</option>
+                <option value="Daily">${t('medicine.freq_daily')}</option>
+                <option value="Twice a day">${t('medicine.freq_twice')}</option>
+                <option value="Weekly">${t('medicine.freq_weekly')}</option>
               </select>
             </div>
           </div>
 
           <button type="submit" class="btn btn-primary" style="margin-top: var(--space-md);">
-            <i data-lucide="plus"></i> Set Medicine Reminder
+            <i data-lucide="plus"></i> ${t('medicine.btn_add')}
           </button>
         </form>
       </div>
 
       <!-- Medicine List -->
       <div style="display: flex; flex-direction: column; gap: var(--space-md);">
-        <h2 style="font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text);">Your Medicines</h2>
+        <h2 style="font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text);">
+          ${t('medicine.list_title')}
+        </h2>
 
         ${medicines.length > 0 ? medicines.map(m => `
           <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
@@ -69,7 +73,7 @@ export function render() {
               <div style="display: flex; align-items: center; gap: var(--space-xs);">
                 <h3 style="font-size: var(--font-size-lg); font-weight: 700;">💊 ${escapeHtml(m.name)}</h3>
                 <span class="badge ${m.taken ? 'badge-success' : 'badge-warning'}">
-                  ${m.taken ? '✅ Taken' : '🔔 Reminder Set'}
+                  ${m.taken ? `✅ ${t('medicine.status_taken')}` : `🔔 ${t('medicine.status_pending')}`}
                 </span>
               </div>
               <p style="color: var(--color-text-secondary); margin-top: 4px;">
@@ -80,17 +84,17 @@ export function render() {
             <div style="display: flex; gap: var(--space-xs); align-items: center;">
               ${!m.taken ? `
                 <button class="btn btn-primary btn-sm mark-taken-btn" data-id="${m.id}">
-                  ✅ Mark Taken
+                  ✅ ${t('medicine.btn_taken')}
                 </button>
               ` : `
                 <button class="btn btn-secondary btn-sm reset-taken-btn" data-id="${m.id}">
-                  Reset Status
+                  ${t('medicine.btn_reset')}
                 </button>
               `}
               <button class="btn btn-secondary btn-sm snooze-btn" data-name="${escapeHtml(m.name)}">
-                ⏰ Later
+                ⏰ ${t('medicine.btn_later')}
               </button>
-              <button class="btn btn-danger btn-sm delete-med-btn" data-id="${m.id}">
+              <button class="btn btn-danger btn-sm delete-med-btn" data-id="${m.id}" aria-label="${t('common.delete')}">
                 <i data-lucide="trash-2"></i>
               </button>
             </div>
@@ -98,8 +102,8 @@ export function render() {
         `).join('') : `
           <div class="empty-state">
             <div class="empty-state-icon"><i data-lucide="pill"></i></div>
-            <div class="empty-state-title">No medicines added yet</div>
-            <p>Add your first medicine above to start receiving reminders.</p>
+            <div class="empty-state-title">${t('medicine.empty_title')}</div>
+            <p>${t('medicine.empty_desc')}</p>
           </div>
         `}
       </div>
@@ -118,7 +122,7 @@ export function init() {
       const freq = document.getElementById('med-freq').value || 'Daily';
 
       if (!isNotEmpty(name)) {
-        toast.show('Please enter a medicine name', 'warning');
+        toast.show(t('common.error'), 'warning');
         return;
       }
 
@@ -134,8 +138,8 @@ export function init() {
       };
 
       state.set('medicines', [newMed, ...medicines]);
-      toast.show('Medicine reminder set successfully!', 'success');
-      location.reload();
+      toast.show(t('medicine.toast_added'), 'success');
+      router.handleRoute();
     });
   }
 
@@ -146,8 +150,8 @@ export function init() {
       const medicines = state.get('medicines') || [];
       const updated = medicines.map(m => m.id === id ? { ...m, taken: true } : m);
       state.set('medicines', updated);
-      toast.show('Medicine marked as taken! Great job ❤️', 'success');
-      location.hash = '#/medicine';
+      toast.show(t('medicine.toast_taken'), 'success');
+      router.handleRoute();
     };
   });
 
@@ -157,15 +161,15 @@ export function init() {
       const medicines = state.get('medicines') || [];
       const updated = medicines.map(m => m.id === id ? { ...m, taken: false } : m);
       state.set('medicines', updated);
-      toast.show('Medicine status reset.', 'info');
-      location.hash = '#/medicine';
+      toast.show(t('medicine.toast_reset'), 'info');
+      router.handleRoute();
     };
   });
 
   document.querySelectorAll('.snooze-btn').forEach(btn => {
     btn.onclick = () => {
       const name = btn.dataset.name;
-      toast.show(`Reminder for ${name} postponed by 15 minutes.`, 'info');
+      toast.show(t('medicine.toast_snooze', { name }), 'info');
     };
   });
 
@@ -173,16 +177,17 @@ export function init() {
     btn.onclick = () => {
       const id = btn.dataset.id;
       modal.show({
-        title: 'Delete Medicine',
-        body: '<p>Are you sure you want to delete this medicine reminder?</p>',
-        confirmText: 'Delete',
+        title: t('medicine.modal_delete_title'),
+        body: `<p>${t('medicine.modal_delete_body')}</p>`,
+        confirmText: t('common.delete'),
+        cancelText: t('common.cancel'),
         danger: true,
         onConfirm: () => {
           const medicines = state.get('medicines') || [];
           const updated = medicines.filter(m => m.id !== id);
           state.set('medicines', updated);
-          toast.show('Medicine deleted.', 'info');
-          location.hash = '#/medicine';
+          toast.show(t('medicine.toast_deleted'), 'info');
+          router.handleRoute();
         }
       });
     };

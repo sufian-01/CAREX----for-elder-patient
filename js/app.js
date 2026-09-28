@@ -13,6 +13,7 @@ import { notificationService } from './services/notificationService.js';
 // Register All Application Routes
 router.register({
   'home':          () => import('./pages/home.js'),
+  'about':         () => import('./pages/about.js'),
   'medicine':      () => import('./pages/medicine.js'),
   'sos':           () => import('./pages/sos.js'),
   'family':        () => import('./pages/family.js'),
@@ -28,6 +29,7 @@ router.register({
   'settings':      () => import('./pages/settings.js'),
   'notifications': () => import('./pages/notifications.js')
 });
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Initialize State & Data Migration

@@ -82,3 +82,9 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Hindi Typography Optimization */
+body.lang-hi {
+  font-family: 'Noto Sans Devanagari', 'Inter', system-ui, -apple-system, sans-serif;
+}
+

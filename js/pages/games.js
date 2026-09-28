@@ -1,8 +1,11 @@
 /**
  * Mini Games Page Module — Realistic Tic-Tac-Toe (Cross ❌ vs Circle ⭕).
+ * Multi-Language Support (English / Hindi).
  */
 
 import { toast } from '../components/toast.js';
+import { router } from '../router.js';
+import { t } from '../services/languageService.js';
 
 let board = Array(9).fill(null);
 let currentPlayer = 'X'; // 'X' or 'O'
@@ -19,12 +22,29 @@ const WINNING_COMBOS = [
 ];
 
 export function render() {
+  let turnStatus = '';
+  if (winner) {
+    if (winner === 'draw') {
+      turnStatus = t('games.draw_msg');
+    } else if (winner === 'X') {
+      turnStatus = t('games.player_x_wins');
+    } else {
+      turnStatus = gameMode === 'ai' ? t('games.computer_wins') : t('games.player_o_wins');
+    }
+  } else {
+    if (currentPlayer === 'X') {
+      turnStatus = t('games.player_x_turn');
+    } else {
+      turnStatus = gameMode === 'ai' ? t('games.computer_thinking') : t('games.player_o_turn');
+    }
+  }
+
   return `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">🎮 Mini Games — Tic-Tac-Toe (❌ vs ⭕)</h1>
-          <p class="page-subtitle">Enjoy a classic, relaxing game of Crosses & Circles.</p>
+          <h1 class="page-title">🎮 ${t('games.title')}</h1>
+          <p class="page-subtitle">${t('games.subtitle')}</p>
         </div>
       </div>
 
@@ -35,33 +55,28 @@ export function render() {
           <!-- Mode Switcher -->
           <div style="display: flex; gap: var(--space-xs);">
             <button id="mode-ai-btn" class="btn ${gameMode === 'ai' ? 'btn-primary' : 'btn-secondary'} btn-sm">
-              🤖 vs Computer (AI)
+              🤖 ${t('games.vs_computer')}
             </button>
             <button id="mode-2p-btn" class="btn ${gameMode === '2player' ? 'btn-primary' : 'btn-secondary'} btn-sm">
-              👥 2 Players
+              👥 ${t('games.two_players')}
             </button>
           </div>
 
           <!-- Scoreboard -->
           <div style="display: flex; gap: var(--space-md); font-weight: 800; font-size: var(--font-size-base);">
-            <span style="color: var(--color-primary);">❌ Wins: ${scores.X}</span>
-            <span style="color: var(--color-danger);">⭕ Wins: ${scores.O}</span>
-            <span style="color: var(--color-text-secondary);">Ties: ${scores.ties}</span>
+            <span style="color: var(--color-primary);">${t('games.x_wins')}: ${scores.X}</span>
+            <span style="color: var(--color-danger);">${t('games.o_wins')}: ${scores.O}</span>
+            <span style="color: var(--color-text-secondary);">${t('games.ties')}: ${scores.ties}</span>
           </div>
 
           <button id="reset-ttt-btn" class="btn btn-secondary btn-sm">
-            <i data-lucide="rotate-ccw"></i> Restart Game
+            <i data-lucide="rotate-ccw"></i> ${t('games.restart')}
           </button>
         </div>
 
         <!-- Turn / Status Indicator -->
         <div style="margin-bottom: var(--space-md); font-size: var(--font-size-xl); font-weight: 800; color: var(--color-text);">
-          ${winner ? (
-            winner === 'draw' ? "🤝 It's a Draw / Tie!" : 
-            (winner === 'X' ? '🎉 Player ❌ Wins!' : (gameMode === 'ai' ? '🤖 Computer ⭕ Wins!' : '🎉 Player ⭕ Wins!'))
-          ) : (
-            currentPlayer === 'X' ? "❌ Player's Turn" : (gameMode === 'ai' ? "⭕ Computer Thinking..." : "⭕ Player 2's Turn")
-          )}
+          ${turnStatus}
         </div>
 
         <!-- Tic Tac Toe 3x3 Grid -->
@@ -69,7 +84,7 @@ export function render() {
           ${board.map((cell, idx) => {
             const isWinningCell = winningLine.includes(idx);
             return `
-              <button class="ttt-cell ${isWinningCell ? 'winning-cell' : ''} ${cell ? 'filled' : ''}" data-index="${idx}">
+              <button class="ttt-cell ${isWinningCell ? 'winning-cell' : ''} ${cell ? 'filled' : ''}" data-index="${idx}" aria-label="Cell ${idx + 1}">
                 <span class="ttt-symbol ${cell === 'X' ? 'symbol-x' : 'symbol-o'}">
                   ${cell === 'X' ? '❌' : (cell === 'O' ? '⭕' : '')}
                 </span>
@@ -115,16 +130,16 @@ export function init() {
       else if (winner === 'O') scores.O++;
       else if (winner === 'draw') scores.ties++;
 
-      if (winner === 'X') toast.show('🎉 Player ❌ Won the Game!', 'success');
-      else if (winner === 'O') toast.show(gameMode === 'ai' ? '🤖 Computer ⭕ Won!' : '🎉 Player ⭕ Won!', 'info');
-      else toast.show("🤝 It's a Tie!", 'info');
+      if (winner === 'X') toast.show(t('games.player_x_wins'), 'success');
+      else if (winner === 'O') toast.show(gameMode === 'ai' ? t('games.computer_wins') : t('games.player_o_wins'), 'info');
+      else toast.show(t('games.draw_msg'), 'info');
 
-      location.hash = '#/games';
+      router.handleRoute();
       return;
     }
 
     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    location.hash = '#/games';
+    router.handleRoute();
 
     // AI Move
     if (gameMode === 'ai' && currentPlayer === 'O' && gameActive) {
@@ -181,7 +196,7 @@ export function init() {
     gameActive = true;
     winner = null;
     winningLine = [];
-    location.hash = '#/games';
+    router.handleRoute();
   }
 
   if (resetBtn) resetBtn.onclick = resetBoard;

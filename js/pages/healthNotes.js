@@ -1,5 +1,5 @@
 /**
- * Health Notes Page Module.
+ * Health Notes Page Module with Multi-Language Support.
  */
 
 import { state } from '../state.js';
@@ -8,6 +8,8 @@ import { isNotEmpty } from '../utils/validation.js';
 import { formatDateFriendly } from '../utils/dateUtils.js';
 import { toast } from '../components/toast.js';
 import { modal } from '../components/modal.js';
+import { router } from '../router.js';
+import { t } from '../services/languageService.js';
 
 export function render() {
   const notes = state.get('healthNotes') || [];
@@ -16,34 +18,34 @@ export function render() {
     <div class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">📝 Health Notes</h1>
-          <p class="page-subtitle">Record vitals, symptoms, and health observations.</p>
+          <h1 class="page-title">📝 ${t('notes.title')}</h1>
+          <p class="page-subtitle">${t('notes.subtitle')}</p>
         </div>
       </div>
 
       <!-- Add Note Form -->
       <div class="card">
-        <h2 style="font-size: var(--font-size-xl); font-weight: 800; margin-bottom: var(--space-md);">Save Health Note</h2>
+        <h2 style="font-size: var(--font-size-xl); font-weight: 800; margin-bottom: var(--space-md);">${t('notes.form_title')}</h2>
         <form id="note-form">
           <div class="form-group">
-            <label for="note-title">Note Title *</label>
-            <input type="text" id="note-title" class="form-control" placeholder="e.g. Blood pressure reading (120/80)" required>
+            <label for="note-title">${t('notes.title_label')}</label>
+            <input type="text" id="note-title" class="form-control" placeholder="${t('notes.title_placeholder')}" required>
           </div>
 
           <div class="form-group">
-            <label for="note-body">Health Note / Details *</label>
-            <textarea id="note-body" class="form-control" placeholder="Write health details or symptoms..." required></textarea>
+            <label for="note-body">${t('notes.body_label')}</label>
+            <textarea id="note-body" class="form-control" placeholder="${t('notes.body_placeholder')}" required></textarea>
           </div>
 
           <button type="submit" class="btn btn-primary" style="margin-top: var(--space-xs);">
-            <i data-lucide="save"></i> Save Health Note
+            <i data-lucide="save"></i> ${t('notes.btn_save')}
           </button>
         </form>
       </div>
 
       <!-- Notes List -->
       <div style="display: flex; flex-direction: column; gap: var(--space-md);">
-        <h2 style="font-size: var(--font-size-xl); font-weight: 800;">Saved Health Notes</h2>
+        <h2 style="font-size: var(--font-size-xl); font-weight: 800;">${t('notes.list_title')}</h2>
 
         ${notes.length > 0 ? notes.map(n => `
           <div class="card">
@@ -58,7 +60,7 @@ export function render() {
                 </p>
               </div>
 
-              <button class="btn btn-danger btn-sm delete-note-btn" data-id="${n.id}">
+              <button class="btn btn-danger btn-sm delete-note-btn" data-id="${n.id}" aria-label="${t('common.delete')}">
                 <i data-lucide="trash-2"></i>
               </button>
             </div>
@@ -66,8 +68,8 @@ export function render() {
         `).join('') : `
           <div class="empty-state">
             <div class="empty-state-icon"><i data-lucide="file-text"></i></div>
-            <div class="empty-state-title">No health notes recorded yet</div>
-            <p>Save notes about vitals, symptoms, or caregiver observations above.</p>
+            <div class="empty-state-title">${t('notes.empty_title')}</div>
+            <p>${t('notes.empty_desc')}</p>
           </div>
         `}
       </div>
@@ -84,7 +86,7 @@ export function init() {
       const body = document.getElementById('note-body').value;
 
       if (!isNotEmpty(title) || !isNotEmpty(body)) {
-        toast.show('Please fill in both title and note body', 'warning');
+        toast.show(t('common.error'), 'warning');
         return;
       }
 
@@ -97,8 +99,8 @@ export function init() {
       };
 
       state.set('healthNotes', [newNote, ...notes]);
-      toast.show('Health note saved!', 'success');
-      location.reload();
+      toast.show(t('notes.toast_added'), 'success');
+      router.handleRoute();
     });
   }
 
@@ -106,16 +108,17 @@ export function init() {
     btn.onclick = () => {
       const id = btn.dataset.id;
       modal.show({
-        title: 'Delete Note',
-        body: '<p>Are you sure you want to delete this health note?</p>',
-        confirmText: 'Delete',
+        title: t('notes.modal_delete_title'),
+        body: `<p>${t('notes.modal_delete_body')}</p>`,
+        confirmText: t('common.delete'),
+        cancelText: t('common.cancel'),
         danger: true,
         onConfirm: () => {
           const notes = state.get('healthNotes') || [];
           const updated = notes.filter(n => n.id !== id);
           state.set('healthNotes', updated);
-          toast.show('Note deleted.', 'info');
-          location.hash = '#/health-notes';
+          toast.show(t('notes.toast_deleted'), 'info');
+          router.handleRoute();
         }
       });
     };

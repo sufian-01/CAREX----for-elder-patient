@@ -1,10 +1,12 @@
 /**
- * Daily Check-in Page Module.
+ * Daily Check-in Page Module with Multi-Language Support.
  */
 
 import { state } from '../state.js';
 import { formatDateFriendly } from '../utils/dateUtils.js';
 import { toast } from '../components/toast.js';
+import { router } from '../router.js';
+import { t } from '../services/languageService.js';
 
 export function render() {
   const checkin = state.get('checkin') || { checked: false };
@@ -15,68 +17,68 @@ export function render() {
     <div class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">❤️ Daily Check-in</h1>
-          <p class="page-subtitle">Confirm your wellness status for peace of mind.</p>
+          <h1 class="page-title">❤️ ${t('checkin.title')}</h1>
+          <p class="page-subtitle">${t('checkin.subtitle')}</p>
         </div>
       </div>
 
       <div class="card" style="text-align: center; padding: var(--space-2xl) var(--space-lg);">
         <h2 style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--color-text);">
-          How are you feeling today?
+          ${t('checkin.question')}
         </h2>
         <p style="color: var(--color-text-secondary); margin-top: 4px;">
-          Select your status to let family members know you are safe.
+          ${t('checkin.desc')}
         </p>
 
         <div class="checkin-options">
-          <button class="checkin-option-btn ${checkin.statusText === "I'm doing well" ? 'selected' : ''}" data-status="I'm doing well">
+          <button class="checkin-option-btn ${checkin.statusKey === 'great' || (!checkin.statusKey && checkin.statusText === "I'm doing well") ? 'selected' : ''}" data-key="great">
             <span style="font-size: 2.5rem;">🌟</span>
-            <span style="font-weight: 800; font-size: var(--font-size-lg);">I'm doing well</span>
+            <span style="font-weight: 800; font-size: var(--font-size-lg);">${t('checkin.feeling_great')}</span>
           </button>
 
-          <button class="checkin-option-btn ${checkin.statusText === "I'm okay" ? 'selected' : ''}" data-status="I'm okay">
+          <button class="checkin-option-btn ${checkin.statusKey === 'ok' || (!checkin.statusKey && checkin.statusText === "I'm okay") ? 'selected' : ''}" data-key="ok">
             <span style="font-size: 2.5rem;">😊</span>
-            <span style="font-weight: 800; font-size: var(--font-size-lg);">I'm okay</span>
+            <span style="font-weight: 800; font-size: var(--font-size-lg);">${t('checkin.feeling_ok')}</span>
           </button>
 
-          <button class="checkin-option-btn ${checkin.statusText === 'I need some help' ? 'selected' : ''}" data-status="I need some help">
+          <button class="checkin-option-btn ${checkin.statusKey === 'help' || (!checkin.statusKey && checkin.statusText === 'I need some help') ? 'selected' : ''}" data-key="help">
             <span style="font-size: 2.5rem;">🤝</span>
-            <span style="font-weight: 800; font-size: var(--font-size-lg);">I need help</span>
+            <span style="font-weight: 800; font-size: var(--font-size-lg);">${t('checkin.feeling_help')}</span>
           </button>
         </div>
 
         <div style="margin-top: var(--space-xl);">
           <button id="do-checkin-btn" class="btn btn-primary btn-lg" style="font-size: var(--font-size-xl); padding: var(--space-md) var(--space-2xl);">
-            ✅ Confirm Check-in
+            ✅ ${t('checkin.btn_confirm')}
           </button>
         </div>
 
         <div style="margin-top: var(--space-lg);">
           <span class="badge ${checkin.checked ? 'badge-success' : 'badge-warning'}">
-            ${checkin.checked ? '✅ Checked In Today' : 'Pending Today'}
+            ${checkin.checked ? `✅ ${t('checkin.status_done')}` : t('checkin.status_pending')}
           </span>
           ${checkin.timestamp ? `
             <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-top: 8px;">
-              Last Check-in: ${formatDateFriendly(checkin.timestamp)}
+              ${t('checkin.last_checkin')}: ${formatDateFriendly(checkin.timestamp)}
             </p>
           ` : ''}
         </div>
       </div>
 
-      ${checkin.statusText === 'I need some help' && primaryContact ? `
+      ${(checkin.statusKey === 'help' || checkin.statusText === 'I need some help') && primaryContact ? `
         <div class="card" style="background-color: var(--color-warning-bg); border-color: var(--color-warning);">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
             <div>
               <h3 style="font-size: var(--font-size-lg); font-weight: 800; color: var(--color-warning);">
-                🤝 Need Assistance?
+                🤝 ${t('checkin.need_help_title')}
               </h3>
               <p style="color: var(--color-text-secondary); margin-top: 2px;">
-                Contact your family or caregiver directly:
+                ${t('checkin.need_help_desc')}
               </p>
             </div>
             ${primaryContact.phone ? `
               <a href="tel:${primaryContact.phone}" class="btn btn-primary">
-                📞 Call ${primaryContact.name}
+                📞 ${t('checkin.call_btn', { name: primaryContact.name })}
               </a>
             ` : ''}
           </div>
@@ -87,13 +89,13 @@ export function render() {
 }
 
 export function init() {
-  let selectedStatus = "I'm okay";
+  let selectedStatusKey = 'ok';
 
   document.querySelectorAll('.checkin-option-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('.checkin-option-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      selectedStatus = btn.dataset.status;
+      selectedStatusKey = btn.dataset.key;
     };
   });
 
@@ -103,10 +105,11 @@ export function init() {
       state.set('checkin', {
         checked: true,
         timestamp: new Date().toISOString(),
-        statusText: selectedStatus
+        statusKey: selectedStatusKey,
+        statusText: selectedStatusKey === 'great' ? "I'm doing well" : (selectedStatusKey === 'help' ? 'I need some help' : "I'm okay")
       });
-      toast.show('Check-in completed successfully! ❤️', 'success');
-      location.reload();
+      toast.show(t('checkin.toast_success'), 'success');
+      router.handleRoute();
     };
   }
 }

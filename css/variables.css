@@ -25,7 +25,7 @@
   --color-shadow: rgba(23, 44, 53, 0.06);
 
   /* Font Families */
-  --font-family: 'Inter', 'Manrope', 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-family: 'Inter', 'Noto Sans Devanagari', 'Manrope', 'DM Sans', system-ui, -apple-system, sans-serif;
   
   /* Font Sizes */
   --font-size-xs: 0.75rem;    /* 12px */
